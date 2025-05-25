@@ -2,7 +2,7 @@ import pygame
 from pygame.sprite import Sprite
 
 
-class Ship():
+class Ship(Sprite):
     def __init__(self, ai_settings, screen):
         """Инициализирует корабль и задает его начальную позицию."""
         super(Ship, self).__init__()
@@ -24,6 +24,10 @@ class Ship():
         # Флаг перемещения
         self.moving_right = False
         self.moving_left = False
+        self.charging_gun = False
+        self.gun_charge = 0
+        self.gun_charged = False
+        self.charge_limit = ai_settings.charge_limit
 
     def update(self):
         """Обновляет позицию корабля с учетом флагов."""

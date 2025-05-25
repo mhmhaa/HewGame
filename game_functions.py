@@ -6,7 +6,7 @@ from bullet import Bullet
 from alien import Alien
 
 
-def check_keydown_events(event, ai_settings, screen, ship, bullets):
+def check_keydown_events(event, ai_settings, stats, sb, screen, ship, aliens, bullets):
     """Реагирует на нажатие клавиш."""
     if event.key == pygame.K_RIGHT:
         ship.moving_right = True
@@ -16,14 +16,25 @@ def check_keydown_events(event, ai_settings, screen, ship, bullets):
         fire_bullet(ai_settings, screen, ship, bullets)
     elif event.key == pygame.K_q:
         sys.exit()
+    elif event.key == pygame.K_p:
+        if not stats.game_active:
+            start_game(ai_settings, screen, stats, sb, ship, aliens, bullets)
 
 
-def check_keyup_events(event, ship):
+def check_keyup_events(event, ai_settings, stats, screen, ship, bullets):
     """Реагирует на отпускание клавиш."""
     if event.key == pygame.K_RIGHT:
         ship.moving_right = False
     elif event.key == pygame.K_LEFT:
         ship.moving_left = False
+    elif event.key == pygame.K_SPACE and stats.game_active:
+        ship.charging_gun = False
+        if ship.gun_charge > ship.charge_limit:
+            ship.gun_charged = True
+            fire_charged_bullet(ai_settings, screen, ship, bullets)
+            ship.gun_charge = 0
+        else:
+            ship.gun_charge = 0
 
 
 def check_events(ai_settings, screen, stats, sb, play_button, ship, aliens, bullets):
@@ -32,40 +43,46 @@ def check_events(ai_settings, screen, stats, sb, play_button, ship, aliens, bull
         if event.type == pygame.QUIT:
             sys.exit()
         elif event.type == pygame.KEYDOWN:
-            check_keydown_events(event, ai_settings, screen, ship, bullets)
+            check_keydown_events (event, ai_settings, stats, sb, screen, ship, aliens, bullets)
         elif event.type == pygame.KEYUP:
-            check_keyup_events(event, ship)
+            check_keyup_events(event, ai_settings, stats, screen, ship, bullets)
         elif event.type == pygame.MOUSEBUTTONDOWN:
             mouse_x, mouse_y = pygame.mouse.get_pos()
             check_play_button(ai_settings, screen, stats, sb, play_button, ship, aliens, bullets, mouse_x, mouse_y)
+            if stats.game_active:
+                fire_bullet(ai_settings, screen, ship, bullets)
 
 
 def check_play_button(ai_settings, screen, stats, sb, play_button, ship, aliens, bullets, mouse_x, mouse_y):
     """Запускает новую игру при нажатии кнопки Play."""
     button_clicked = play_button.rect.collidepoint(mouse_x, mouse_y)
     if button_clicked and not stats.game_active:
-        # Сброс игровых настроек.
-        ai_settings.initialize_dynamic_settings()
+        start_game(ai_settings, screen, stats, sb, ship, aliens, bullets)
 
-        # Указатель мыши скрывается.
-        pygame.mouse.set_visible(False)
 
-        # Сброс игровой статистики.
-        stats.reset_stats()
-        stats.game_active = True
+def start_game(ai_settings, screen, stats, sb, ship, aliens, bullets):
+    # Сброс игровых настроек.
+    ai_settings.initialize_dynamic_settings()
 
-        # Сброс изображений счетов и уровня.
-        sb.prep_score()
-        sb.prep_high_score()
-        sb.prep_level()
-        sb.prep_ships()
+    # Указатель мыши скрывается.
+    pygame.mouse.set_visible(False)
 
-        # Очистка списков пришельцев и пуль.
-        aliens.empty()
-        bullets.empty()
-        # Создание нового флота и размещение корабля в центре.
-        create_fleet(ai_settings, screen, ship, aliens)
-        ship.center_ship()
+    # Сброс игровой статистики.
+    stats.reset_stats()
+    stats.game_active = True
+
+    # Сброс изображений счетов и уровня.
+    sb.prep_score()
+    sb.prep_high_score()
+    sb.prep_level()
+    sb.prep_ships()
+
+    # Очистка списков пришельцев и пуль.
+    aliens.empty()
+    bullets.empty()
+    # Создание нового флота и размещение корабля в центре.
+    create_fleet(ai_settings, screen, ship, aliens)
+    ship.center_ship()
 
 
 def update_screen(ai_settings, screen, stats, sb, ship, aliens, bullets, play_button):
@@ -144,6 +161,14 @@ def fire_bullet(ai_settings, screen, ship, bullets):
     if len(bullets) < ai_settings.bullets_allowed:
         new_bullet = Bullet(ai_settings, screen, ship)
         bullets.add(new_bullet)
+
+
+def fire_charged_bullet(ai_settings, screen, ship, bullets):
+    new_bullet = Bullet(ai_settings, screen, ship)
+    new_bullet.charged_shot = True
+    new_bullet.color = ai_settings.charged_bullet_color
+    bullets.add(new_bullet)
+    ship.gun_charged = False
 
 
 def get_number_rows(ai_settings, ship_height, alien_height):

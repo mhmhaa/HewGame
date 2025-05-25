@@ -18,7 +18,7 @@ def run_game():
     pygame.display.set_caption("Alien Invasion")
 
     # Создание кнопки Play.
-    play_button = Button(ai_settings, screen, "Play")
+    play_button = Button(ai_settings, screen, "Играть")
 
     # Создание экземпляров GameStats и Scoreboard.
     stats = GameStats(ai_settings)

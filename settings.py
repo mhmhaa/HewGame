@@ -17,6 +17,8 @@ class Settings():
         self.bullet_height = 15
         self.bullet_color = 60, 60, 60
         self.bullets_allowed = 3
+        self.charge_speed = 5
+        self.charge_limit = 800
 
         # Настройки пришельцев
         self.fleet_drop_speed = 10
